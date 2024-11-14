@@ -91,6 +91,7 @@ SELECT --*
 FROM [Sales].[Invoices] AS i
 INNER JOIN [Sales].[InvoiceLines] AS il ON il.InvoiceID = i.InvoiceID
 GROUP BY YEAR(i.InvoiceDate), MONTH(i.InvoiceDate), il.Description
+HAVING Count(il.Quantity) < 50
 ORDER BY YEAR(i.InvoiceDate), MONTH(i.InvoiceDate)
 
 
