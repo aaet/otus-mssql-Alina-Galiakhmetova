@@ -37,10 +37,10 @@ USE WideWorldImporters
 Продажи можно взять из таблицы Invoices.
 Нарастающий итог должен быть без оконной функции.
 */
---Select SUM(UnitPrice*Quantity)
---FROM 
---		[Sales].[InvoiceLines] IL 
---		INNER JOIN [Sales].[Invoices] I ON I.[InvoiceID] = IL.[InvoiceID] and  i.InvoiceDate Like '2015-01%'
+Select SUM(UnitPrice*Quantity)
+FROM 
+		[Sales].[InvoiceLines] IL 
+		INNER JOIN [Sales].[Invoices] I ON I.[InvoiceID] = IL.[InvoiceID] and  i.InvoiceDate Like '2015-02%'
 SET STATISTICS TIME ON;
 select 
 	idпродажи		= IL.[InvoiceID],
@@ -51,7 +51,7 @@ select
 	сумманарастающимитогом	= (select		  sum(UnitPrice*Quantity) 
 								from  [Sales].[InvoiceLines] IL2
 								inner join [Sales].[Invoices] I2 ON I2.InvoiceID = IL2.InvoiceID and  i2.InvoiceDate BETWEEN '2015-01-01' AND '2015-12-31'
-								where MONTH(i.InvoiceDate) = MONTH(i2.InvoiceDate)
+								where MONTH(i.InvoiceDate) >= MONTH(i2.InvoiceDate)
 								)--IL.InvoiceID=IL2.InvoiceID 
 from 
 		[Sales].[InvoiceLines] IL 
@@ -72,7 +72,7 @@ select
 	датупродажи		= I.[InvoiceDate],
 	MonthOfIvoice   = Month(i.[InvoiceDate]),
 	суммaпродажи	= UnitPrice*Quantity,
-	сумманарастающимитогом	= SUM(UnitPrice*Quantity) OVER(PARTITION BY Month(i.[InvoiceDate]))
+	сумманарастающимитогом	= SUM(UnitPrice*Quantity) OVER(ORDER BY Month(i.[InvoiceDate]))
 from 
 		[Sales].[InvoiceLines] IL 
 		INNER JOIN [Sales].[Invoices] I ON I.[InvoiceID] = IL.[InvoiceID] and  i.InvoiceDate BETWEEN '2015-01-01' AND '2015-12-31'
