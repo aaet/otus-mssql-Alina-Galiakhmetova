@@ -55,7 +55,7 @@ CREATE TABLE [dbo].[Employees](
 ) ON [PRIMARY]
 GO
 
---3. Таблица [dbo].[EmployeeTitles] является справочником, кластерные индексы не нужны
+--3. Таблица [dbo].[EmployeeTitles] является справочником, НЕкластерные индексы не нужны
 /****** Object:  Table [dbo].[EmployeeTitles]    Script Date: 3/21/2025 9:53:32 AM ******/
 SET ANSI_NULLS ON
 GO
@@ -82,7 +82,7 @@ GO
 ALTER TABLE [dbo].[EmployeeTitles] CHECK CONSTRAINT [FK_EmployeeTitles_nDepartmentId]
 GO
 
---4. Таблица [dbo].[EmployeeTitlesExams] это таблица связи много ко многим для [dbo].[EmployeeTitles] и [dbo].[Exams] кластерные индексы не требуются
+--4. Таблица [dbo].[EmployeeTitlesExams] это таблица связи много ко многим для [dbo].[EmployeeTitles] и [dbo].[Exams] кластерный индекс составной
 /****** Object:  Table [dbo].[EmployeeTitlesExams]    Script Date: 3/21/2025 9:58:13 AM ******/
 SET ANSI_NULLS ON
 GO
