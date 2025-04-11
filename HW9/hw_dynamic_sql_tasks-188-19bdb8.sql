@@ -41,37 +41,45 @@ InvoiceMonth | Aakriti Byrraju    | Abel Spirlea       | Abel Tatarescu | ... (�
 -------------+--------------------+--------------------+----------------+----------------------
 */
 
-DROP table if EXISTS #tbl
-CREATE Table #tbl (dt nvarchar(50), CustomerName nvarchar(100), kol int)
-iNSERT INTO #tbl 
-Select 
-		'01.' + RIGHT(FORMAT([InvoiceDate], 'dd.MM.yyyy'),7),
-		'['+REPLACE(RIGHT(c.[CustomerName], lEN(c.[CustomerName])-CHARINDEX('(',c.[CustomerName])),')','')+']' ,
-		count(*)
-		--STRING_AGG(Str([InvoiceID]),' ,')
-FROM [Sales].[Invoices] i
-INNER JOIN [Sales].[Customers] c ON c.CustomerID = i.CustomerID
-GROUP BY '01.' + RIGHT(FORMAT([InvoiceDate], 'dd.MM.yyyy'),7),c.[CustomerName]
+--DROP table if EXISTS #tbl
+--CREATE Table #tbl (dt nvarchar(50), CustomerName nvarchar(100), kol int)
+--iNSERT INTO #tbl 
+--;WITH cte (dt nvarchar(50), CustomerName nvarchar(100), kol int)
+--as (
+--Select 
+--		'01.' + RIGHT(FORMAT([InvoiceDate], 'dd.MM.yyyy'),7),
+--		'['+REPLACE(RIGHT(c.[CustomerName], lEN(c.[CustomerName])-CHARINDEX('(',c.[CustomerName])),')','')+']',
+--		count(*)
+--FROM [Sales].[Invoices] i
+--INNER JOIN [Sales].[Customers] c ON c.CustomerID = i.CustomerID
+--GROUP BY '01.' + RIGHT(FORMAT([InvoiceDate], 'dd.MM.yyyy'),7),c.[CustomerName])
 
 --Здесь пришлось часть клиентов вырезать, так как столкнулась с ограничением row в 8060 bytes
-Declare @list nvarchar(max) = LEFT(REPLACE((SELECT STUFF((SELECT DISTINCT (', ' + CustomerName) FROM #tbl order by (', ' + CustomerName) FOR XML PATH('')), 1, 2, '')),'''', ''''''),LEN(REPLACE((SELECT STUFF((SELECT DISTINCT (', ' + CustomerName) FROM #tbl order by (', ' + CustomerName) FOR XML PATH('')), 1, 2, '')),'''', '''''')) - 62),
+--Declare @list nvarchar(max) = LEFT(REPLACE((SELECT STUFF((SELECT DISTINCT (', ' + CustomerName) FROM #tbl order by (', ' + CustomerName) FOR XML PATH('')), 1, 2, '')),'''', ''''''),LEN(REPLACE((SELECT STUFF((SELECT DISTINCT (', ' + CustomerName) FROM #tbl order by (', ' + CustomerName) FOR XML PATH('')), 1, 2, '')),'''', '''''')) - 62),
+Declare @list nvarchar(max),		
 		@query nvarchar(max)
-Select * FROM #tbl
+select @list = concat_ws(',', @list, quotename(CustomerName))  from Sales.Customers order by CustomerName
+--Select * FROM #tbl order by dt
 Select @list
 
 SET @query = N'
-select dt as InvoiceMont
+select dt as InvoiceMonth
       ,'+@list+'
-from
-(select dt, CustomerName, kol from #tbl)
+from (Select 
+		''01.'' + RIGHT(FORMAT([InvoiceDate], ''dd.MM.yyyy''),7) as dt,
+		c.[CustomerName] as CustomerName,
+		count(*) as kol
+FROM [Sales].[Invoices] i
+INNER JOIN [Sales].[Customers] c ON c.CustomerID = i.CustomerID
+GROUP BY ''01.'' + RIGHT(FORMAT([InvoiceDate], ''dd.MM.yyyy''),7),c.[CustomerName])
 as SourceTable
 pivot
-(AVG(kol)
+(sum(kol)
 for CustomerName  
 in ('+@list+')
 )
 as PivotTable
-ORDER BY InvoiceMont;'
+ORDER BY InvoiceMonth;'
 
 	select @query;
 EXEC sp_executesql @query, @parameters = N'@list nvarchar(max)', @list = @list
